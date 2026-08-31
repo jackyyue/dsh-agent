@@ -45,10 +45,22 @@ async function test() {
   if (staticRes.status !== 200) throw new Error(`chat.html 返回 ${staticRes.status}`);
   console.log('✅ 测试 3 通过：chat.html 可访问');
 
-  // 测试 4：目录穿越被拦截
+  // 测试 4：分享功能资源（qrcode.min.js + 分享元素）
+  let qrRes = await fetchUrl(`${BASE}/qrcode.min.js`);
+  if (qrRes.status !== 200) throw new Error(`qrcode.min.js 返回 ${qrRes.status}`);
+  if (!qrRes.data.includes('qrcode')) throw new Error('qrcode.min.js 内容异常');
+  console.log('✅ 测试 4 通过：qrcode.min.js 可访问且内容有效');
+
+  let shareHtml = await fetchUrl(`${BASE}/chat.html`);
+  if (!shareHtml.data.includes('share-overlay')) throw new Error('chat.html 缺少分享弹窗');
+  if (!shareHtml.data.includes('share-entry')) throw new Error('chat.html 缺少分享入口按钮');
+  if (!shareHtml.data.includes('dsh-agent.com')) throw new Error('chat.html 缺少分享链接');
+  console.log('✅ 测试 5 通过：chat.html 包含分享功能（弹窗 + 入口 + 链接）');
+
+  // 测试 6：目录穿越被拦截
   let traversal = await fetchUrl(`${BASE}/../package.json`);
   if (traversal.status === 403 || traversal.status === 404) {
-    console.log(`✅ 测试 4 通过：目录穿越被拦截 (${traversal.status})`);
+    console.log(`✅ 测试 6 通过：目录穿越被拦截 (${traversal.status})`);
   } else {
     throw new Error(`目录穿越未被拦截，返回 ${traversal.status}`);
   }

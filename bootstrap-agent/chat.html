@@ -23,6 +23,12 @@
     #header .dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; }
     #header .title { font-size: 15px; font-weight: 600; }
     #header .sub { font-size: 12px; color: #888; margin-left: 4px; }
+    #header .spacer { flex: 1; }
+    #share-entry {
+      padding: 7px 14px; border: 1px solid #4f46e5; border-radius: 8px;
+      background: transparent; color: #a5b4fc; font-size: 13px; cursor: pointer;
+    }
+    #share-entry:hover { background: rgba(79,70,229,0.2); }
     #messages {
       flex: 1; overflow-y: auto; padding: 20px;
       display: flex; flex-direction: column; gap: 12px;
@@ -71,6 +77,41 @@
       border-radius: 50%; animation: spin 0.6s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== 分享弹窗 ===== */
+    #share-overlay {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,0.65);
+      display: none; align-items: center; justify-content: center;
+    }
+    #share-overlay.show { display: flex; }
+    #share-card {
+      background: #16213e; border: 1px solid #333; border-radius: 16px;
+      padding: 28px 30px; max-width: 340px; width: 90%;
+      text-align: center;
+    }
+    #share-card h2 { font-size: 18px; margin-bottom: 6px; }
+    #share-card .share-desc { font-size: 13px; color: #999; margin-bottom: 16px; }
+    #share-card .qr-box {
+      background: #fff; border-radius: 12px; padding: 12px;
+      display: inline-block; margin-bottom: 14px;
+    }
+    #share-card .qr-box img { display: block; width: 180px; height: 180px; }
+    #share-card .share-copy-text {
+      font-size: 13px; color: #cbd5e1; background: #1a1a2e;
+      border: 1px solid #333; border-radius: 8px;
+      padding: 10px; margin-bottom: 14px; word-break: break-all; user-select: all;
+    }
+    #share-card .btn-row { display: flex; gap: 10px; justify-content: center; }
+    #share-card button {
+      padding: 10px 18px; border: none; border-radius: 8px;
+      font-size: 14px; cursor: pointer;
+    }
+    #share-card .btn-copy { background: #4f46e5; color: #fff; }
+    #share-card .btn-copy:hover { background: #4338ca; }
+    #share-card .btn-close { background: #333; color: #cbd5e1; }
+    #share-card .btn-close:hover { background: #444; }
+    #share-card .copied-tip { font-size: 12px; color: #22c55e; margin-top: 10px; height: 16px; }
   </style>
 </head>
 <body>
@@ -79,6 +120,8 @@
       <span class="dot"></span>
       <span class="title">DSH Agent</span>
       <span class="sub">已就绪</span>
+      <span class="spacer"></span>
+      <button id="share-entry">分享给朋友</button>
     </div>
     <div id="messages"></div>
     <div id="input-area">
@@ -86,6 +129,23 @@
       <button id="send-btn">发送</button>
     </div>
   </div>
+
+  <!-- 分享弹窗 -->
+  <div id="share-overlay">
+    <div id="share-card">
+      <h2>把 DSH Agent 分享给朋友</h2>
+      <p class="share-desc">朋友扫码即可下载，双击即用，无需命令行</p>
+      <div class="qr-box"><img id="share-qr" alt="DSH Agent 二维码"></div>
+      <div class="share-copy-text" id="share-text">https://dsh-agent.com</div>
+      <div class="btn-row">
+        <button class="btn-copy" id="share-copy">复制链接</button>
+        <button class="btn-close" id="share-close">关闭</button>
+      </div>
+      <div class="copied-tip" id="share-tip"></div>
+    </div>
+  </div>
+
+  <script src="qrcode.min.js"></script>
   <script>
     const messagesEl = document.getElementById('messages');
     const inputEl = document.getElementById('user-input');
@@ -93,6 +153,72 @@
 
     const messages = [];
 
+    // ===== 分享功能 =====
+    const SHARE_URL = 'https://dsh-agent.com';
+    const SHARE_TEXT = 'DSH Agent - 开箱即用的 AI 助手\n扫码下载，双击即用，无需命令行';
+    let shareShown = false; // 首次对话后自动弹出一次
+
+    function buildShareQR() {
+      const img = document.getElementById('share-qr');
+      try {
+        const qr = qrcode(0, 'M');
+        qr.addData(SHARE_URL);
+        qr.make();
+        img.src = qr.createDataURL(4, 8);
+      } catch (e) {
+        img.style.display = 'none';
+      }
+    }
+
+    function showShareCard() {
+      buildShareQR();
+      document.getElementById('share-overlay').classList.add('show');
+    }
+
+    function hideShareCard() {
+      document.getElementById('share-overlay').classList.remove('show');
+      document.getElementById('share-tip').textContent = '';
+    }
+
+    function copyShareLink() {
+      const tip = document.getElementById('share-tip');
+      const done = () => { tip.textContent = '✓ 链接已复制'; setTimeout(() => { tip.textContent = ''; }, 2000); };
+      const fail = () => { tip.textContent = '复制失败，请手动复制上方链接'; };
+
+      // 优先用 Clipboard API；localhost 环境可用
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(SHARE_URL).then(done, () => {
+          // 回退：textarea + execCommand
+          fallbackCopy(SHARE_URL, done, fail);
+        });
+      } else {
+        fallbackCopy(SHARE_URL, done, fail);
+      }
+    }
+
+    function fallbackCopy(text, done, fail) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy') ? done() : fail();
+      } catch {
+        fail();
+      }
+      document.body.removeChild(ta);
+    }
+
+    document.getElementById('share-entry').addEventListener('click', showShareCard);
+    document.getElementById('share-copy').addEventListener('click', copyShareLink);
+    document.getElementById('share-close').addEventListener('click', hideShareCard);
+    document.getElementById('share-overlay').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('share-overlay')) hideShareCard();
+    });
+
+    // ===== 对话功能 =====
     function addMessage(role, content, withActions) {
       messages.push({ role, content });
       const div = document.createElement('div');
@@ -134,7 +260,6 @@
       inputEl.value = '';
       sendBtn.disabled = true;
 
-      // 加载指示器
       const loadingDiv = document.createElement('div');
       loadingDiv.className = 'message assistant';
       loadingDiv.innerHTML = '<span class="spinner"></span>';
@@ -157,6 +282,11 @@
         } else {
           const reply = data.choices[0].message.content;
           addMessage('assistant', reply);
+          // 首次成功对话后自动弹出分享卡片
+          if (!shareShown) {
+            shareShown = true;
+            setTimeout(showShareCard, 600);
+          }
         }
       } catch (err) {
         loadingDiv.remove();
