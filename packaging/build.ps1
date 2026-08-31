@@ -43,6 +43,9 @@ WshShell.Run Chr(34) & base & "node\node.exe" & Chr(34) & " " & Chr(34) & base &
 "@
 $startVbs | Out-File -FilePath "$tempDir\start.vbs" -Encoding ascii
 
+# 5.1 复制 uninstall.bat 到安装根目录（与 start.vbs 同级，用户可双击卸载）
+Copy-Item -Path (Join-Path $PSScriptRoot 'uninstall.bat') -Destination "$tempDir\uninstall.bat" -Force
+
 # 6. 打包为 7-Zip SFX
 $sevenZip = "C:\Program Files\7-Zip\7z.exe"
 if (-not (Test-Path $sevenZip)) {

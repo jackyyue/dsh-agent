@@ -57,6 +57,16 @@ if (Test-Path (Join-Path $agentDir 'chat.html')) {
     Report 'chat.html has share entry' ($chat -match 'share-entry')
     Report 'chat.html references qrcode.min.js' ($chat -match 'qrcode\.min\.js')
 }
+$uninstallBat = Join-Path $root 'packaging\uninstall.bat'
+if (Test-Path $uninstallBat) {
+    $ub = Get-Content $uninstallBat -Raw
+    Report 'uninstall.bat exists' $true
+    Report 'uninstall.bat kills port 19999' ($ub -match '19999')
+    Report 'uninstall.bat removes install dir' ($ub -match 'Remove-Item')
+    Report 'uninstall.bat supports -y' ($ub -match '\-y')
+} else {
+    Report 'uninstall.bat exists' $false
+}
 
 # --- [4] dependencies ---
 Write-Host '[4/6] Dependencies'
