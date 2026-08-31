@@ -1,0 +1,17 @@
+# Node
+node_modules/
+dist/
+packaging/node-portable/
+packaging/node-v*.zip
+
+# 运行时产物
+bootstrap-agent/config.json
+full-agent/
+
+# 系统
+Thumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+.idea/
