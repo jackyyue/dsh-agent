@@ -1,0 +1,8 @@
+;!@Install@!UTF-8!
+Title="DSH Agent 安装向导"
+BeginPrompt="即将安装 DSH Agent，是否继续？"
+ExtractPathText="选择安装位置"
+ExtractDialogText="正在解压..."
+GUIFlags="8+32+64+4096"
+RunProgram="wscript.exe start.vbs"
+;!@InstallEnd@!

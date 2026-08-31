@@ -15,3 +15,6 @@ Desktop.ini
 # IDE
 .vscode/
 .idea/
+
+# 临时 base64 传输文件
+*.b64

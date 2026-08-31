@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DSH Agent</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #1a1a2e; color: #e0e0e0;
+      display: flex; justify-content: center; align-items: center;
+      height: 100vh; overflow: hidden;
+    }
+    #chat-container {
+      width: 100%; max-width: 640px; height: 100vh;
+      display: flex; flex-direction: column;
+    }
+    #header {
+      padding: 14px 20px; background: #16213e; border-bottom: 1px solid #333;
+      display: flex; align-items: center; gap: 10px;
+    }
+    #header .dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; }
+    #header .title { font-size: 15px; font-weight: 600; }
+    #header .sub { font-size: 12px; color: #888; margin-left: 4px; }
+    #messages {
+      flex: 1; overflow-y: auto; padding: 20px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .message {
+      max-width: 85%; padding: 12px 16px; border-radius: 12px;
+      line-height: 1.5; font-size: 15px; white-space: pre-wrap; word-break: break-word;
+    }
+    .message.user {
+      align-self: flex-end; background: #4f46e5; color: #fff;
+    }
+    .message.assistant {
+      align-self: flex-start; background: #2d2d44;
+    }
+    .message.system {
+      align-self: center; background: transparent; color: #888;
+      font-size: 13px; font-style: italic; text-align: center;
+    }
+    .message.error {
+      align-self: center; background: rgba(220,38,38,0.15); color: #f87171;
+      font-size: 13px; border-radius: 8px;
+    }
+    .message .quick-actions { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .quick-actions button {
+      padding: 8px 14px; border: 1px solid #4f46e5; border-radius: 8px;
+      background: transparent; color: #a5b4fc; font-size: 13px; cursor: pointer;
+    }
+    .quick-actions button:hover { background: rgba(79,70,229,0.2); }
+    #input-area {
+      display: flex; padding: 16px; gap: 8px;
+      border-top: 1px solid #333; background: #16213e;
+    }
+    #input-area input {
+      flex: 1; padding: 12px; border: 1px solid #333; border-radius: 8px;
+      font-size: 15px; background: #1a1a2e; color: #e0e0e0; outline: none;
+    }
+    #input-area input:focus { border-color: #4f46e5; }
+    #input-area button {
+      padding: 12px 20px; border: none; border-radius: 8px;
+      font-size: 15px; background: #4f46e5; color: #fff; cursor: pointer;
+    }
+    #input-area button:disabled { background: #333; cursor: not-allowed; }
+    .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid #4f46e5; border-top-color: transparent;
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <div id="header">
+      <span class="dot"></span>
+      <span class="title">DSH Agent</span>
+      <span class="sub">已就绪</span>
+    </div>
+    <div id="messages"></div>
+    <div id="input-area">
+      <input type="text" id="user-input" placeholder="输入消息..." autofocus>
+      <button id="send-btn">发送</button>
+    </div>
+  </div>
+  <script>
+    const messagesEl = document.getElementById('messages');
+    const inputEl = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+
+    const messages = [];
+
+    function addMessage(role, content, withActions) {
+      messages.push({ role, content });
+      const div = document.createElement('div');
+      div.className = `message ${role}`;
+      const text = document.createElement('div');
+      text.textContent = content;
+      div.appendChild(text);
+
+      if (withActions) {
+        const actions = document.createElement('div');
+        actions.className = 'quick-actions';
+        const btn = document.createElement('button');
+        btn.textContent = '试着帮我整理桌面文件';
+        btn.addEventListener('click', () => {
+          inputEl.value = '帮我整理桌面文件到不同文件夹';
+          sendMessage();
+        });
+        actions.appendChild(btn);
+        div.appendChild(actions);
+      }
+
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function addSystemMessage(content, isError) {
+      const div = document.createElement('div');
+      div.className = `message ${isError ? 'error' : 'system'}`;
+      div.textContent = content;
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+
+      addMessage('user', text);
+      inputEl.value = '';
+      sendBtn.disabled = true;
+
+      // 加载指示器
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'message assistant';
+      loadingDiv.innerHTML = '<span class="spinner"></span>';
+      messagesEl.appendChild(loadingDiv);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: [...messages] }),
+        });
+        const data = await res.json();
+        loadingDiv.remove();
+
+        if (data.keyError) {
+          addSystemMessage('⚠️ ' + data.error.message, true);
+        } else if (data.error) {
+          addSystemMessage('出错了：' + data.error.message, true);
+        } else {
+          const reply = data.choices[0].message.content;
+          addMessage('assistant', reply);
+        }
+      } catch (err) {
+        loadingDiv.remove();
+        addSystemMessage('网络错误：' + err.message, true);
+      }
+
+      sendBtn.disabled = false;
+      inputEl.focus();
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    // 首次加载欢迎消息
+    addSystemMessage('🟢 DSH Agent 已就绪');
+    addMessage(
+      'assistant',
+      '你好！我是你的 AI 助手，刚刚装好了 😊\n\n我正在后台下载更强大的版本（大概 3 分钟），现在先试试我能帮你：\n- 整理桌面文件到不同文件夹\n- 批量重命名照片（比如加上日期）\n- 把 Word 文档转成 PDF\n\n或者直接告诉我你想做什么？',
+      true
+    );
+  </script>
+</body>
+</html>
