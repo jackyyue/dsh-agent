@@ -1,10 +1,10 @@
 # DSH Agent
 
-开箱即用的 AI Agent 分发渠道：让小白**扫码 → 注册 → 下载 → 双击 → 对话**，零术语、零命令行、零配置。
+开箱即用的 AI Agent 分发渠道：让用户**扫码 → 注册 → 下载 → 双击 → 对话**，零术语、零命令行、零配置。
 
 ## 这是什么
 
-DSH Agent 是一个「引导 Agent」：一个极小的自解压程序，双击后自动启动本地对话服务，浏览器即开即聊。它负责把小白领进 AI Agent 世界，后续可后台升级为完整版 Agent。
+DSH Agent 是一个「引导 Agent」：一个极小的自解压程序，双击后自动启动本地对话服务，浏览器即开即聊。它负责把零基础用户领进 AI Agent 世界，后续可后台升级为完整版 Agent。
 
 - **引导 Agent**：`bootstrap-agent/`（Node.js v22，仅内置模块，零依赖）
 - **下载页**：`download-page/`（静态 HTML，可部署到 GitHub Pages / 任意静态托管）
@@ -41,7 +41,7 @@ node bootstrap-agent/test/server.test.js
 ## 使用流程
 
 ```
-小白扫码 → 打开下载页 → 引导注册 DeepSeek 拿 key
+用户扫码 → 打开下载页 → 引导注册 DeepSeek 拿 key
 → 粘贴 key → 下载 exe（21.5MB）→ 双击 → 浏览器对话
 ```
 
