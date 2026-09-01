@@ -4,6 +4,10 @@ dist/
 packaging/node-portable/
 packaging/node-v*.zip
 
+# 构建现场（预打包 DSH 验证目录——203MB node_modules + 隔离 dsh-home，不进仓库）
+packaging/prepack/
+packaging/uninstall-check/
+
 # 运行时产物
 bootstrap-agent/config.json
 full-agent/

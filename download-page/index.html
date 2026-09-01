@@ -26,20 +26,19 @@
     p { margin-bottom: 12px; color: #666; }
     .tagline { font-size: 14px; color: #888; margin-bottom: 20px; }
     .hint { font-size: 13px; color: #999; margin-top: 8px; }
-    .hint.success { color: #16a34a; }
-    .hint.error { color: #dc2626; }
+    .steps-list { margin: 16px 0 20px; padding-left: 20px; }
+    .steps-list li { margin-bottom: 8px; font-size: 15px; }
     button, .btn-primary {
       display: inline-block; padding: 12px 24px; border: none; border-radius: 8px;
       font-size: 16px; cursor: pointer; background: #4f46e5; color: #fff;
-      text-decoration: none; text-align: center;
+      text-decoration: none; text-align: center; width: 100%;
     }
     button:hover, .btn-primary:hover { background: #4338ca; }
     button:disabled { background: #ccc; cursor: not-allowed; }
-    input[type="password"] {
-      width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;
-      font-size: 16px; margin-bottom: 12px; font-family: monospace;
-    }
-    #verify-result { font-size: 14px; }
+    .btn-green { background: #16a34a; }
+    .btn-green:hover { background: #15803d; }
+    .btn-gray { background: #e5e7eb; color: #333; margin-top: 12px; }
+    .btn-gray:hover { background: #d1d5db; }
     footer { max-width: 480px; width: 100%; text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #999; font-size: 13px; }
     footer p { margin-bottom: 6px; color: #999; }
   </style>
@@ -49,32 +48,27 @@
     <div id="step1" class="step active">
       <h1>DSH Agent</h1>
       <p class="tagline">开箱即用的 AI 助手，双击即可对话</p>
-      <p>安装需要一个免费的 DeepSeek API key，1 分钟搞定。</p>
+      <p>安装只需 3 步，全程点一点、粘一粘，大约 2 分钟：</p>
+      <ol class="steps-list">
+        <li>准备一个免费的 DeepSeek API key（1 分钟）</li>
+        <li>下载安装包并双击运行</li>
+        <li>按软件里的指引完成设置，开始对话</li>
+      </ol>
       <button id="btn-start">开始</button>
     </div>
     <div id="step2" class="step">
-      <h2>第一步：注册 DeepSeek</h2>
-      <p>点击下方按钮，打开 DeepSeek 官网注册账号并创建 API key。</p>
+      <h2>第一步：准备 DeepSeek API key</h2>
+      <p>点击下方按钮，打开 DeepSeek 官网注册账号并创建 API key。它是免费的，拿来配好软件就能用了。</p>
       <a href="https://platform.deepseek.com/api_keys" target="_blank" class="btn-primary">打开 DeepSeek → 创建 API key</a>
-      <p class="hint">注册后，在页面右上角点击「创建 API key」，复制生成的 key。</p>
-      <button id="btn-have-key">我已有 key，下一步</button>
+      <p class="hint">注册后在右上角点「创建 API key」，复制以 sk- 开头的那串字符。稍后安装时会用到。</p>
+      <button id="btn-have-key" class="btn-gray">我已经有 key，下一步</button>
     </div>
     <div id="step3" class="step">
-      <h2>第二步：粘贴你的 API key</h2>
-      <input type="password" id="api-key-input" placeholder="sk-xxxxxxxxxxxxxxxx">
-      <button id="btn-verify">下一步</button>
-      <p id="verify-result" class="hint"></p>
-    </div>
-    <div id="step4" class="step">
-      <h2>✅ 格式正确！</h2>
-      <p>你的 API key 已就绪。点击下载安装包，下载后双击运行即可。</p>
-      <button id="btn-download" class="btn-primary">下载 DSH Agent</button>
-      <p class="hint">下载后双击运行即可。真实 key 有效性将在首次对话时验证。</p>
-    </div>
-    <div id="step5" class="step">
-      <h2>❌ 格式不正确</h2>
-      <p id="error-msg"></p>
-      <button id="btn-retry">重新输入</button>
+      <h2>第二步：下载安装包</h2>
+      <p>点击下方按钮下载（约 44 MB）。</p>
+      <button id="btn-download" class="btn-primary btn-green">下载 DSH Agent</button>
+      <p class="hint">下载完成后双击运行即可，软件会自动完成安装设置。</p>
+      <p class="hint">如果没有自动开始下载，点这里<a href="https://github.com/jackyyue/dsh-agent/releases/latest/download/dsh-agent-installer.exe" target="_blank" style="color:#4f46e5">手动下载</a>。</p>
     </div>
   </div>
   <footer>
@@ -86,69 +80,21 @@
     <p>Powered by <a href="https://www.deepseek.com" target="_blank" style="color: #666; text-decoration: none;">DeepSeek</a></p>
   </footer>
   <script>
-    // 步骤切换
     function showStep(id) {
       document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
       document.getElementById(id).classList.add('active');
     }
-
-    // 验证 API key（仅格式校验，真实有效性在首次对话时验证）
-    function verifyKey(key) {
-      // 只验证格式：sk- 开头，长度 > 20
-      if (!key.startsWith('sk-') || key.length < 20) {
-        return { valid: false, message: 'API key 格式不正确，应以 sk- 开头且长度至少 20 个字符' };
-      }
-      return { valid: true };
-    }
-
-    // 生成 config.json 并触发下载
-    function downloadConfig(key) {
-      const config = JSON.stringify({ apiKey: key, createdAt: new Date().toISOString() }, null, 2);
-      const blob = new Blob([config], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'config.json';
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    // 事件绑定
     document.getElementById('btn-start').addEventListener('click', () => showStep('step2'));
     document.getElementById('btn-have-key').addEventListener('click', () => showStep('step3'));
 
-    document.getElementById('btn-verify').addEventListener('click', () => {
-      const key = document.getElementById('api-key-input').value.trim();
-      const resultEl = document.getElementById('verify-result');
-
-      const result = verifyKey(key);
-
-      if (!result.valid) {
-        resultEl.textContent = result.message;
-        resultEl.className = 'hint error';
-        return;
-      }
-
-      resultEl.textContent = '✅ 格式正确！（真实有效性将在首次对话时验证）';
-      resultEl.className = 'hint success';
-
-      setTimeout(() => {
-        showStep('step4');
-        // 预存 config
-        window._configKey = key;
-      }, 800);
-    });
-
     document.getElementById('btn-download').addEventListener('click', () => {
-      downloadConfig(window._configKey);
-      // 同时触发 exe 下载
       const a = document.createElement('a');
       a.href = 'https://github.com/jackyyue/dsh-agent/releases/latest/download/dsh-agent-installer.exe';
       a.download = 'dsh-agent-installer.exe';
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
     });
-
-    document.getElementById('btn-retry').addEventListener('click', () => showStep('step3'));
   </script>
 </body>
 </html>
