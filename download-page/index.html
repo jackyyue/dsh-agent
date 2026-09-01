@@ -89,7 +89,7 @@
     document.getElementById('btn-download').addEventListener('click', () => {
       const a = document.createElement('a');
       a.href = 'https://github.com/jackyyue/dsh-agent/releases/latest/download/dsh-agent.exe';
-      a.download = 'dsh-agent-installer.exe';
+      a.download = 'dsh-agent.exe';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
