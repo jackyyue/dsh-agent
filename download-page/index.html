@@ -3,96 +3,152 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DSH Agent - 开箱即用的 AI 助手</title>
-  <meta name="description" content="DSH Agent 是一个开箱即用的 AI 助手，无需命令行、零配置，双击即可对话。支持文件整理、批量重命名、格式转换等日常任务。">
-  <meta name="keywords" content="AI助手,AI Agent,DSH,开箱即用,零配置,DeepSeek">
-  <meta property="og:title" content="DSH Agent - 开箱即用的 AI 助手">
-  <meta property="og:description" content="双击即可对话，无需命令行、零配置">
+  <title>DSH Agent - 本地 AI 助手</title>
+  <meta name="description" content="DSH Agent 是一个本地 AI 助手，双击即可使用，无需命令行、无需配置环境。">
+  <meta name="keywords" content="AI助手,AI Agent,DSH,本地AI,DeepSeek">
+  <meta property="og:title" content="DSH Agent - 本地 AI 助手">
+  <meta property="og:description" content="双击即可使用，无需命令行、无需配置">
   <meta property="og:url" content="https://dsh-agent.com">
   <meta property="og:type" content="website">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f5f5f5; color: #333; line-height: 1.6;
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
-      min-height: 100vh; padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
     }
-    #app { max-width: 480px; width: 100%; background: #fff; border-radius: 12px; padding: 32px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }
-    .step { display: none; }
-    .step.active { display: block; }
-    h1 { font-size: 24px; margin-bottom: 8px; }
-    h2 { font-size: 20px; margin-bottom: 12px; }
-    p { margin-bottom: 12px; color: #666; }
-    .tagline { font-size: 14px; color: #888; margin-bottom: 20px; }
-    .hint { font-size: 13px; color: #999; margin-top: 8px; }
-    .steps-list { margin: 16px 0 20px; padding-left: 20px; }
-    .steps-list li { margin-bottom: 8px; font-size: 15px; }
-    button, .btn-primary {
-      display: inline-block; padding: 12px 24px; border: none; border-radius: 8px;
-      font-size: 16px; cursor: pointer; background: #4f46e5; color: #fff;
-      text-decoration: none; text-align: center; width: 100%;
+    .container {
+      max-width: 540px;
+      width: 100%;
+      text-align: center;
     }
-    button:hover, .btn-primary:hover { background: #4338ca; }
-    button:disabled { background: #ccc; cursor: not-allowed; }
-    .btn-green { background: #16a34a; }
-    .btn-green:hover { background: #15803d; }
-    .btn-gray { background: #e5e7eb; color: #333; margin-top: 12px; }
-    .btn-gray:hover { background: #d1d5db; }
-    footer { max-width: 480px; width: 100%; text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #999; font-size: 13px; }
-    footer p { margin-bottom: 6px; color: #999; }
+    h1 {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .tagline {
+      font-size: 20px;
+      margin-bottom: 32px;
+      opacity: 0.95;
+    }
+    .features {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 32px;
+      text-align: left;
+    }
+    .features h2 {
+      font-size: 18px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .features ul {
+      list-style: none;
+      padding: 0;
+    }
+    .features li {
+      padding: 8px 0;
+      font-size: 16px;
+    }
+    .features li::before {
+      content: "✓ ";
+      font-weight: bold;
+      margin-right: 8px;
+    }
+    .download-btn {
+      display: inline-block;
+      padding: 18px 48px;
+      font-size: 20px;
+      font-weight: 600;
+      color: #667eea;
+      background: #fff;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .download-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
+    .file-info {
+      margin-top: 16px;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    .hint {
+      margin-top: 24px;
+      font-size: 15px;
+      opacity: 0.85;
+      line-height: 1.6;
+    }
+    footer {
+      margin-top: 48px;
+      font-size: 13px;
+      opacity: 0.7;
+    }
+    footer a {
+      color: #fff;
+      text-decoration: none;
+      margin: 0 8px;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
-  <div id="app">
-    <div id="step1" class="step active">
-      <h1>DSH Agent</h1>
-      <p class="tagline">开箱即用的 AI 助手，双击即可对话</p>
-      <p>安装只需 3 步，全程点一点、粘一粘，大约 2 分钟：</p>
-      <ol class="steps-list">
-        <li>准备一个免费的 DeepSeek API key（1 分钟）</li>
-        <li>下载安装包并双击运行</li>
-        <li>按软件里的指引完成设置，开始对话</li>
-      </ol>
-      <button id="btn-start">开始</button>
+  <div class="container">
+    <h1>DSH Agent</h1>
+    <p class="tagline">本地 AI 助手，帮你干活</p>
+    
+    <div class="features">
+      <h2>开箱即用</h2>
+      <ul>
+        <li>不用懂命令行</li>
+        <li>不用装 Node.js</li>
+        <li>双击就能用</li>
+      </ul>
     </div>
-    <div id="step2" class="step">
-      <h2>第一步：准备 DeepSeek API key</h2>
-      <p>点击下方按钮，打开 DeepSeek 官网注册账号并创建 API key。它是免费的，拿来配好软件就能用了。</p>
-      <a href="https://platform.deepseek.com/api_keys" target="_blank" class="btn-primary">打开 DeepSeek → 创建 API key</a>
-      <p class="hint">注册后在右上角点「创建 API key」，复制以 sk- 开头的那串字符。稍后安装时会用到。</p>
-      <button id="btn-have-key" class="btn-gray">我已经有 key，下一步</button>
-    </div>
-    <div id="step3" class="step">
-      <h2>第二步：下载</h2>
-      <p>点击下方按钮下载（约 162 MB）。</p>
-      <button id="btn-download" class="btn-primary btn-green">下载 DSH Agent</button>
-      <p class="hint">下载完成后双击运行即可，软件会自动完成安装设置。</p>
-      <p class="hint">如果没有自动开始下载，点这里<a href="https://github.com/jackyyue/dsh-agent/releases/latest/download/dsh-agent.exe" target="_blank" style="color:#4f46e5">手动下载</a>。</p>
-    </div>
-  </div>
-  <footer>
-    <p>
-      <a href="https://github.com/jackyyue/dsh-agent" target="_blank" style="color: #666; text-decoration: none;">GitHub</a> · 
-      <a href="https://docs.dsh-agent.com" target="_blank" style="color: #666; text-decoration: none;">文档</a> · 
-      开源 MIT 协议
+    
+    <a href="https://github.com/jackyyue/dsh-agent/releases/latest/download/dsh-agent.exe" 
+       class="download-btn" 
+       id="btn-download">
+      下载 DSH Agent
+    </a>
+    
+    <p class="file-info">
+      约 200MB · Windows 10/11 (64位)
     </p>
+    
+    <p class="hint">
+      下载后双击运行，软件会引导你完成设置。<br>
+      全程 2 分钟，跟着提示走就行。
+    </p>
+  </div>
+  
+  <footer>
+    <a href="https://github.com/jackyyue/dsh-agent" target="_blank">GitHub</a>
+    ·
+    <a href="https://github.com/jackyyue/dsh-agent/blob/main/LICENSE" target="_blank">MIT 协议</a>
   </footer>
+  
   <script>
-    function showStep(id) {
-      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-    }
-    document.getElementById('btn-start').addEventListener('click', () => showStep('step2'));
-    document.getElementById('btn-have-key').addEventListener('click', () => showStep('step3'));
-
-    document.getElementById('btn-download').addEventListener('click', () => {
-      const a = document.createElement('a');
-      a.href = 'https://github.com/jackyyue/dsh-agent/releases/latest/download/dsh-agent.exe';
-      a.download = 'dsh-agent.exe';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+    document.getElementById('btn-download').addEventListener('click', function(e) {
+      // 触发下载的同时记录（可选的分析）
+      console.log('Download started');
     });
   </script>
 </body>
