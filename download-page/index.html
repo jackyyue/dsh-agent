@@ -64,11 +64,11 @@
       <button id="btn-have-key" class="btn-gray">我已经有 key，下一步</button>
     </div>
     <div id="step3" class="step">
-      <h2>第二步：下载安装包</h2>
-      <p>点击下方按钮下载（约 44 MB）。</p>
+      <h2>第二步：下载</h2>
+      <p>点击下方按钮下载（约 162 MB）。</p>
       <button id="btn-download" class="btn-primary btn-green">下载 DSH Agent</button>
       <p class="hint">下载完成后双击运行即可，软件会自动完成安装设置。</p>
-      <p class="hint">如果没有自动开始下载，点这里<a href="https://github.com/jackyyue/dsh-agent/releases/latest/download/dsh-agent-installer.exe" target="_blank" style="color:#4f46e5">手动下载</a>。</p>
+      <p class="hint">如果没有自动开始下载，点这里<a href="https://github.com/jackyyue/dsh-agent/releases/latest/download/dsh-agent.exe" target="_blank" style="color:#4f46e5">手动下载</a>。</p>
     </div>
   </div>
   <footer>
@@ -88,7 +88,7 @@
 
     document.getElementById('btn-download').addEventListener('click', () => {
       const a = document.createElement('a');
-      a.href = 'https://github.com/jackyyue/dsh-agent/releases/latest/download/dsh-agent-installer.exe';
+      a.href = 'https://github.com/jackyyue/dsh-agent/releases/latest/download/dsh-agent.exe';
       a.download = 'dsh-agent-installer.exe';
       document.body.appendChild(a);
       a.click();
